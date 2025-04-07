@@ -28,7 +28,7 @@ services:
       - SERVER_PORT=9100
     networks:
       - user-service-network
-    restart: on-failure:3
+    restart: always
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -49,6 +49,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    restart: always
 
 volumes:
   rabbitmq_data:
