@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: java-rabbitMQ-userCorreo
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8082:9100" # Externo:Interno
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST}
+      - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT}
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS}
+      - SPRING_MAIL_HOST=${MAIL_HOST}
+      - SPRING_MAIL_PORT=${MAIL_PORT}
+      - SPRING_MAIL_USERNAME=${MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD}
+      - APP_RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE}
+      - APP_RABBITMQ_QUEUE=${RABBITMQ_QUEUE}
+      - APP_RABBITMQ_ROUTINGKEY=${RABBITMQ_ROUTING_KEY}
+      - JAVA_OPTS=${JAVA_OPTS}
+      - SERVER_PORT=9100
+    networks:
+      - user-service-network
+    restart: on-failure:3
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-userCorreo
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - user-service-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  user-service-network:
+    driver: bridge
